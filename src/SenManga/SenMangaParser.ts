@@ -12,8 +12,6 @@ import {
 } from 'paperback-extensions-common'
 
 import entities = require('entities')
-import { data } from 'cheerio/lib/api/attributes'
-
 
 export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
     const titles: string[] = []
