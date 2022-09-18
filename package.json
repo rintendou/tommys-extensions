@@ -31,7 +31,7 @@
     "eslint": "^7.27.0",
     "eslint-plugin-modules-newline": "^0.0.6",
     "mocha": "^9.1.1",
-    "typescript": "^4.3.2"
+    "typescript": "^4.8.3"
   },
   "dependencies": {
     "paperback-cli": "^1.4.0",
