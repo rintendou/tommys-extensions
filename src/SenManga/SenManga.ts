@@ -213,6 +213,8 @@ export class SenManga extends Source {
                 method: 'GET'
             })
         }
+        
+        if (!request) return createPagedResults({results:[], metadata: undefined})
 
         const response = await this.requestManager.schedule(request, 1)
         const $ = this.cheerio.load(response.data)
