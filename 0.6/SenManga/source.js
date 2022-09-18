@@ -735,7 +735,7 @@ class SenManga extends paperback_extensions_common_1.Source {
             const response = yield this.requestManager.schedule(request, 1);
             this.CloudFlareError(response.status);
             const $ = this.cheerio.load(response.data);
-            return SenMangaParser_1.parseMangaDetails($, mangaId);
+            return (0, SenMangaParser_1.parseMangaDetails)($, mangaId);
         });
     }
     getChapters(mangaId) {
@@ -747,7 +747,7 @@ class SenManga extends paperback_extensions_common_1.Source {
             const response = yield this.requestManager.schedule(request, 1);
             this.CloudFlareError(response.status);
             const $ = this.cheerio.load(response.data);
-            return SenMangaParser_1.parseChapters($, mangaId);
+            return (0, SenMangaParser_1.parseChapters)($, mangaId);
         });
     }
     getChapterDetails(mangaId, chapterId) {
@@ -760,7 +760,7 @@ class SenManga extends paperback_extensions_common_1.Source {
             const response = yield this.requestManager.schedule(request, 1);
             this.CloudFlareError(response.status);
             const $ = this.cheerio.load(response.data);
-            return SenMangaParser_1.parseChapterDetails($, mangaId, chapterId);
+            return (0, SenMangaParser_1.parseChapterDetails)($, mangaId, chapterId);
         });
     }
     filterUpdatedManga(mangaUpdatesFoundCallback, time, ids) {
@@ -777,7 +777,7 @@ class SenManga extends paperback_extensions_common_1.Source {
                 });
                 const response = yield this.requestManager.schedule(request, 1);
                 const $ = this.cheerio.load(response.data);
-                updatedManga = SenMangaParser_1.parseUpdatedManga($, time, ids);
+                updatedManga = (0, SenMangaParser_1.parseUpdatedManga)($, time, ids);
                 if (updatedManga.ids.length > 0) {
                     mangaUpdatesFoundCallback(createMangaUpdates({
                         ids: updatedManga.ids
@@ -795,7 +795,7 @@ class SenManga extends paperback_extensions_common_1.Source {
             const response = yield this.requestManager.schedule(request, 1);
             this.CloudFlareError(response.status);
             const $ = this.cheerio.load(response.data);
-            SenMangaParser_1.parseHomeSections($, sectionCallback);
+            (0, SenMangaParser_1.parseHomeSections)($, sectionCallback);
         });
     }
     getViewMoreItems(homepageSectionId, metadata) {
@@ -826,8 +826,8 @@ class SenManga extends paperback_extensions_common_1.Source {
             const response = yield this.requestManager.schedule(request, 1);
             this.CloudFlareError(response.status);
             const $ = this.cheerio.load(response.data);
-            const manga = SenMangaParser_1.parseViewMore($);
-            metadata = !SenMangaParser_1.isLastPage($) ? { page: page + 1 } : undefined;
+            const manga = (0, SenMangaParser_1.parseViewMore)($);
+            metadata = !(0, SenMangaParser_1.isLastPage)($) ? { page: page + 1 } : undefined;
             return createPagedResults({
                 results: manga,
                 metadata
@@ -842,7 +842,7 @@ class SenManga extends paperback_extensions_common_1.Source {
             });
             const response = yield this.requestManager.schedule(request, 1);
             const $ = this.cheerio.load(response.data);
-            return SenMangaParser_1.parseTags($);
+            return (0, SenMangaParser_1.parseTags)($);
         });
     }
     getSearchResults(query, metadata) {
@@ -857,10 +857,12 @@ class SenManga extends paperback_extensions_common_1.Source {
                     method: 'GET'
                 });
             }
+            if (!request)
+                return createPagedResults({ results: [], metadata: undefined });
             const response = yield this.requestManager.schedule(request, 1);
             const $ = this.cheerio.load(response.data);
-            const manga = SenMangaParser_1.parseSearch($);
-            metadata = !SenMangaParser_1.isLastPage($) ? { page: page + 1 } : undefined;
+            const manga = (0, SenMangaParser_1.parseSearch)($);
+            metadata = !(0, SenMangaParser_1.isLastPage)($) ? { page: page + 1 } : undefined;
             return createPagedResults({
                 results: manga,
                 metadata
