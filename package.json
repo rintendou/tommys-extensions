@@ -1,8 +1,8 @@
 {
-  "name": "netskys-extensions",
+  "name": "tommys-extensions",
   "version": "2.0.0",
-  "repositoryName": "Netsky's Extensions (0.6)",
-  "description": "Netsky's extensions for 0.6!",
+  "repositoryName": "tommys's Extensions (0.6)",
+  "description": "tommys's extensions for 0.6!",
   "main": "index.js",
   "scripts": {
     "bundle": "paperback bundle",
@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Paperback-iOS/extensions-official.git"
+    "url": "git+https://github.com/rintendou/tommys-extensions.git"
   },
-  "author": "Netsky",
+  "author": "tommy",
   "license": "GPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/Paperback-iOS/extensions-official/issues"
+    "url": "https://github.com/rintendou/tommys-extensions/issues"
   },
-  "homepage": "https://github.com/Paperback-iOS/extensions-official#readme",
+  "homepage": "https://github.com/rintendou/tommys-extensions#readme",
   "devDependencies": {
     "@types/chai": "^4.2.21",
     "@types/chai-as-promised": "^7.1.4",
