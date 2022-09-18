@@ -1,4 +1,4 @@
-# Current Avaiable Repositories
+# Current Available Repositories
 
 | Source(s) | Description | Link |
 | ---       | ---         | ---  |
