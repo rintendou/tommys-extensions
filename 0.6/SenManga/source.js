@@ -689,11 +689,11 @@ const SenMangaParser_1 = require("./SenMangaParser");
 const SenMangaHelper_1 = require("./SenMangaHelper");
 const SEN_DOMAIN = 'https://raw.senmanga.com';
 exports.SenMangaInfo = {
-    version: '1.0.2',
+    version: '1.0.0',
     name: 'SenManga',
     icon: 'icon.png',
     author: 'rintendou',
-    authorWebsite: 'https://github.com/TheNetsky',
+    authorWebsite: 'https://github.com/rintendou',
     description: 'Extension that pulls manga from senmanga.com.',
     contentRating: paperback_extensions_common_1.ContentRating.MATURE,
     websiteBaseURL: SEN_DOMAIN,
