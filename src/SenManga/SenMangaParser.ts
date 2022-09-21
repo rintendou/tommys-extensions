@@ -25,18 +25,21 @@ export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
     const author = $('a', $('div.info div.item:contains(\'Author\')')).text().trim()
 
     const arrayTags: Tag[] = []
-    for (const tag of $('a', 'div.item genre').toArray()) {
+    for (const tag of $('a', 'div.info div.item:contains(\'Genres\')').toArray()) {
         const label = $(tag).text().trim()
         const id = encodeURI($(tag).text().trim())
 
         if (!id || !label) continue
+
         arrayTags.push({ id: id, label: label })
     }
+
     const tagSections: TagSection[] = [createTagSection({ id: '0', label: 'genres', tags: arrayTags.map(x => createTag(x)) })]
 
     const description = decodeHTMLEntity($('div.summary').text().trim() ?? 'No description available')
 
-    const rawStatus = $('div.item', 'div.info').contents().last().text()
+    const rawStatus = $('div.info div.item:contains(\'Status:\')').text().replace('Status:', '').trim()
+    console.log(rawStatus)
     let status = MangaStatus.ONGOING
     switch (rawStatus.toUpperCase()) {
         case 'ONGOING':
@@ -73,9 +76,6 @@ export const parseChapters = ($: CheerioStatic, mangaId: string): Chapter[] => {
         if (!chapterId) continue
 
         const date = new Date($('time', chapter).attr('datetime')?.split(' ')[0] ?? '')
-        
-        console.log($('time', chapter).attr('datetime'))
-        
 
         const chapNumRegex = title.match(/(\d+\.?\d?)+/)
         let chapNum = 0
@@ -300,19 +300,11 @@ export const parseSearch = ($: CheerioStatic): MangaTile[] => {
 }
 
 export const isLastPage = ($: CheerioStatic): boolean => {
-    let isLast = false
-    const pages = []
+    // When you go ONLY to the last page in the search menu, the final li node appears with class 'page-item disabled'. Can use this to see if on last page.
+    let isLast = true
+    const hasDisabled = $('li.page-item', 'ul.pagination').last().attr()['class']?.trim() == 'page-item disabled'
+    if (!hasDisabled) isLast = false
 
-    for (const page of $('li', 'ul.pagination').toArray()) {
-        const p = Number($(page).text().trim())
-        if (isNaN(p)) continue
-        pages.push(p)
-    }
-
-    const lastPage = Math.max(...pages)
-    const currentPage = Number($('span.page-link').first().text())
-
-    if (currentPage >= lastPage) isLast = true
     return isLast
 }
 
