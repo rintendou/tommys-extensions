@@ -686,6 +686,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SenManga = exports.SenMangaInfo = void 0;
 const paperback_extensions_common_1 = require("paperback-extensions-common");
 const SenMangaParser_1 = require("./SenMangaParser");
+const SenMangaHelper_1 = require("./SenMangaHelper");
 const SEN_DOMAIN = 'https://raw.senmanga.com';
 exports.SenMangaInfo = {
     version: '1.0.2',
@@ -849,14 +850,16 @@ class SenManga extends paperback_extensions_common_1.Source {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const page = (_a = metadata === null || metadata === void 0 ? void 0 : metadata.page) !== null && _a !== void 0 ? _a : 1;
-            let request;
-            // Title search
-            if (query.title) {
-                request = createRequestObject({
-                    url: `${SEN_DOMAIN}/search?s=${encodeURI((_b = query.title) !== null && _b !== void 0 ? _b : '')}`,
-                    method: 'GET'
-                });
-            }
+            const url = new SenMangaHelper_1.URLBuilder(SEN_DOMAIN)
+                .addPathComponent('search')
+                .addQueryParameter('title', encodeURI((query === null || query === void 0 ? void 0 : query.title) || ''))
+                .addQueryParameter('page', page)
+                .addQueryParameter('genre%5B%5D', (_b = query.includedTags) === null || _b === void 0 ? void 0 : _b.map((x) => x.id).join('&genre%5B%5D='))
+                .buildUrl();
+            const request = createRequestObject({
+                url: url,
+                method: 'GET'
+            });
             if (!request)
                 return createPagedResults({ results: [], metadata: undefined });
             const response = yield this.requestManager.schedule(request, 1);
@@ -886,7 +889,51 @@ class SenManga extends paperback_extensions_common_1.Source {
 }
 exports.SenManga = SenManga;
 
-},{"./SenMangaParser":57,"paperback-extensions-common":13}],57:[function(require,module,exports){
+},{"./SenMangaHelper":57,"./SenMangaParser":58,"paperback-extensions-common":13}],57:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.URLBuilder = void 0;
+class URLBuilder {
+    constructor(baseUrl) {
+        this.parameters = {};
+        this.pathComponents = [];
+        this.baseUrl = baseUrl.replace(/(^\/)?(?=.*)(\/$)?/gim, '');
+    }
+    addPathComponent(component) {
+        this.pathComponents.push(component.replace(/(^\/)?(?=.*)(\/$)?/gim, ''));
+        return this;
+    }
+    addQueryParameter(key, value) {
+        this.parameters[key] = value;
+        return this;
+    }
+    buildUrl({ addTrailingSlash, includeUndefinedParameters } = { addTrailingSlash: false, includeUndefinedParameters: false }) {
+        let finalUrl = this.baseUrl + '/';
+        finalUrl += this.pathComponents.join('/');
+        finalUrl += addTrailingSlash ? '/' : '';
+        finalUrl += Object.values(this.parameters).length > 0 ? '?' : '';
+        finalUrl += Object.entries(this.parameters).map(entry => {
+            if (!entry[1] && !includeUndefinedParameters) {
+                return undefined;
+            }
+            if (Array.isArray(entry[1])) {
+                return entry[1].map(value => value || includeUndefinedParameters ? `${entry[0]}[]=${value}` : undefined)
+                    .filter(x => x !== undefined)
+                    .join('&');
+            }
+            if (typeof entry[1] === 'object') {
+                return Object.keys(entry[1]).map(key => entry[1][key] || includeUndefinedParameters ? `${entry[0]}[${key}]=${entry[1][key]}` : undefined)
+                    .filter(x => x !== undefined)
+                    .join('&');
+            }
+            return `${entry[0]}=${entry[1]}`;
+        }).filter(x => x !== undefined).join('&');
+        return finalUrl;
+    }
+}
+exports.URLBuilder = URLBuilder;
+
+},{}],58:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isLastPage = exports.parseSearch = exports.parseTags = exports.parseViewMore = exports.parseHomeSections = exports.parseUpdatedManga = exports.parseChapterDetails = exports.parseChapters = exports.parseMangaDetails = void 0;
@@ -903,7 +950,7 @@ const parseMangaDetails = ($, mangaId) => {
     const image = (_c = $('img', 'div.cover').attr('src')) !== null && _c !== void 0 ? _c : '';
     const author = $('a', $('div.info div.item:contains(\'Author\')')).text().trim();
     const arrayTags = [];
-    for (const tag of $('a', 'div.item genre').toArray()) {
+    for (const tag of $('a', 'div.info div.item:contains(\'Genres\')').toArray()) {
         const label = $(tag).text().trim();
         const id = encodeURI($(tag).text().trim());
         if (!id || !label)
@@ -912,7 +959,8 @@ const parseMangaDetails = ($, mangaId) => {
     }
     const tagSections = [createTagSection({ id: '0', label: 'genres', tags: arrayTags.map(x => createTag(x)) })];
     const description = decodeHTMLEntity((_d = $('div.summary').text().trim()) !== null && _d !== void 0 ? _d : 'No description available');
-    const rawStatus = $('div.item', 'div.info').contents().last().text();
+    const rawStatus = $('div.info div.item:contains(\'Status:\')').text().replace('Status:', '').trim();
+    console.log(rawStatus);
     let status = paperback_extensions_common_1.MangaStatus.ONGOING;
     switch (rawStatus.toUpperCase()) {
         case 'ONGOING':
@@ -947,7 +995,6 @@ const parseChapters = ($, mangaId) => {
         if (!chapterId)
             continue;
         const date = new Date((_e = (_d = $('time', chapter).attr('datetime')) === null || _d === void 0 ? void 0 : _d.split(' ')[0]) !== null && _e !== void 0 ? _e : '');
-        console.log($('time', chapter).attr('datetime'));
         const chapNumRegex = title.match(/(\d+\.?\d?)+/);
         let chapNum = 0;
         if (chapNumRegex && chapNumRegex[1])
@@ -1143,18 +1190,12 @@ const parseSearch = ($) => {
 };
 exports.parseSearch = parseSearch;
 const isLastPage = ($) => {
-    let isLast = false;
-    const pages = [];
-    for (const page of $('li', 'ul.pagination').toArray()) {
-        const p = Number($(page).text().trim());
-        if (isNaN(p))
-            continue;
-        pages.push(p);
-    }
-    const lastPage = Math.max(...pages);
-    const currentPage = Number($('span.page-link').first().text());
-    if (currentPage >= lastPage)
-        isLast = true;
+    var _a;
+    // When you go ONLY to the last page in the search menu, the final li node appears with class 'page-item disabled'. Can use this to see if on last page.
+    let isLast = true;
+    const hasDisabled = ((_a = $('li.page-item', 'ul.pagination').last().attr()['class']) === null || _a === void 0 ? void 0 : _a.trim()) == 'page-item disabled';
+    if (!hasDisabled)
+        isLast = false;
     return isLast;
 };
 exports.isLastPage = isLastPage;
