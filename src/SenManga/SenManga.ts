@@ -36,11 +36,11 @@ import {
 const SEN_DOMAIN = 'https://raw.senmanga.com'
 
 export const SenMangaInfo: SourceInfo = {
-    version: '1.0.2',
+    version: '1.0.0',
     name: 'SenManga',
     icon: 'icon.png',
     author: 'rintendou',
-    authorWebsite: 'https://github.com/TheNetsky',
+    authorWebsite: 'https://github.com/rintendou',
     description: 'Extension that pulls manga from senmanga.com.',
     contentRating: ContentRating.MATURE,
     websiteBaseURL: SEN_DOMAIN,
