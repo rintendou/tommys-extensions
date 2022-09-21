@@ -28,6 +28,10 @@ import {
     parseUpdatedManga
 } from './SenMangaParser'
 
+import {
+    URLBuilder
+} from './SenMangaHelper'
+
 
 const SEN_DOMAIN = 'https://raw.senmanga.com'
 
@@ -204,15 +208,20 @@ export class SenManga extends Source {
 
     async getSearchResults(query: SearchRequest, metadata: any): Promise<PagedResults> {
         const page: number = metadata?.page ?? 1
-        let request
 
-        // Title search
-        if (query.title) {
-            request = createRequestObject({
-                url: `${SEN_DOMAIN}/search?s=${encodeURI(query.title ?? '')}`,
-                method: 'GET'
-            })
-        }
+        const url = new URLBuilder(SEN_DOMAIN)
+            .addPathComponent('search')
+            .addQueryParameter('title', encodeURI(query?.title || ''))
+            .addQueryParameter('page', page)
+            .addQueryParameter('genre%5B%5D', query.includedTags?.map((x: any) => x.id).join('&genre%5B%5D='))
+            .buildUrl()
+
+        console.log(url)
+        
+        const request = createRequestObject({
+            url: url,
+            method: 'GET'
+        })
         
         if (!request) return createPagedResults({results:[], metadata: undefined})
 
