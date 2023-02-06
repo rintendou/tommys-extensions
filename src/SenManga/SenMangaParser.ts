@@ -92,7 +92,6 @@ export const parseChapters = ($: CheerioStatic, mangaId: string): Chapter[] => {
     return chapters
 }
 
-// THIS IS BROKEN
 export const parseChapterDetails = ($: CheerioStatic, mangaId: string, chapterId: string): ChapterDetails => {
     const pages: string[] = []
 
