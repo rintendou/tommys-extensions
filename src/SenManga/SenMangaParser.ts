@@ -38,8 +38,7 @@ export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
 
     const description = decodeHTMLEntity($('div.summary').text().trim() ?? 'No description available')
 
-    const rawStatus = $('div.info div.item:contains(\'Status:\')').text().replace('Status:', '').trim()
-    console.log(rawStatus)
+    const rawStatus = $('div.info div.item:contains(\'Status:\')').text().replace('Status:', ' ').trim()
     let status = MangaStatus.ONGOING
     switch (rawStatus.toUpperCase()) {
         case 'ONGOING':
@@ -67,7 +66,6 @@ export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
 
 export const parseChapters = ($: CheerioStatic, mangaId: string): Chapter[] => {
     const chapters: Chapter[] = []
-    let sortingIndex = 0
 
     for (const chapter of $('li', 'ul.chapter-list').toArray()) {
         const title = decodeHTMLEntity($('a', chapter).text().trim())
@@ -88,25 +86,18 @@ export const parseChapters = ($: CheerioStatic, mangaId: string): Chapter[] => {
             langCode: LanguageCode.ENGLISH,
             chapNum: chapNum,
             time: date,
-            // @ts-ignore
-            sortingIndex
         }))
-        sortingIndex--
     }
 
     return chapters
 }
 
+// THIS IS BROKEN
 export const parseChapterDetails = ($: CheerioStatic, mangaId: string, chapterId: string): ChapterDetails => {
     const pages: string[] = []
 
-    const data = $.html()
-    let obj: any = /var imglist = ([^;]*)/.exec(data)?.[1] ?? ''
-    if (obj == '') throw new Error(`Failed to find page details script for manga ${mangaId}`) // If null, throw error, else parse data to json.
-    obj = JSON.parse(obj)
- 
-    for (const img of obj) {
-        const image = img.url
+    for (const img of $('.reader .picture').toArray()) {
+        const image = $(img).attr('src')
         if (!image) continue
         pages.push(image)
     }
@@ -131,7 +122,7 @@ export const parseUpdatedManga = ($: CheerioStatic, time: Date, ids: string[]): 
 
     const updatedManga: string[] = []
 
-    for (const manga of $('div.mng', 'div.listupd').toArray()) {
+    for (const manga of $('div.mng', 'div.search-body').toArray()) {
         const id = $('a', manga).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? ''
         if (!id) continue
 
@@ -158,11 +149,11 @@ export const parseUpdatedManga = ($: CheerioStatic, time: Date, ids: string[]): 
 export const parseHomeSections = ($: CheerioStatic, sectionCallback: (section: HomeSection) => void): void => {
     const mostPopularSection = createHomeSection({ id: 'most_popular', title: 'Most Popular', view_more: true, type: HomeSectionType.singleRowLarge })
     const newSection = createHomeSection({ id: 'new', title: 'New', view_more: true })
-    const updateSection = createHomeSection({ id: 'updated', title: 'Latest Updated', view_more: true })
+    const updateSection = createHomeSection({ id: 'updated', title: 'Recently Updated', view_more: true })
 
     // Most Popular
     const mostPopularSection_Array: MangaTile[] = []
-    for (const manga of $('li',$('.widget .widget-header:contains(\'Most Popular\')').next()).toArray()) {
+    for (const manga of $('li',$('.sidebar .widget .widget-header:contains(\'Most Popular\')').next()).toArray()) {
 
         const image: string = $('img', manga).first().attr('src') ?? ''
         const title: string = $('img', manga).first().attr('alt') ?? ''
@@ -201,9 +192,9 @@ export const parseHomeSections = ($: CheerioStatic, sectionCallback: (section: H
     newSection.items = newSection_Array
     sectionCallback(newSection)
 
-    // Updated
+    // Recently Updated
     const updateSection_Array: MangaTile[] = []
-    for (const manga of $('div.mng', 'div.listupd').toArray()) {
+    for (const manga of $('div.mng', 'div.widget').toArray()) {
 
         const image: string = $('img', manga).first().attr('src') ?? ''
         const title: string = $('img', manga).first().attr('alt') ?? ''
