@@ -155,7 +155,7 @@ export const parseHomeSections = ($: CheerioStatic, sectionCallback: (section: H
     const mostPopularSection_Array: MangaTile[] = []
     for (const manga of $('li',$('.sidebar .widget .widget-header:contains(\'Most Popular\')').next()).toArray()) {
 
-        const image: string = $('img', manga).first().attr('src') ?? ''
+        const image: string = $('img', manga).first().attr('data-src') ?? ''
         const title: string = $('img', manga).first().attr('alt') ?? ''
 
         const id = $('a', manga).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? ''
@@ -175,7 +175,7 @@ export const parseHomeSections = ($: CheerioStatic, sectionCallback: (section: H
     const newSection_Array: MangaTile[] = []
     for (const manga of $('li',$('.widget .widget-header:contains(\'New Series\')').next()).toArray()) {
 
-        const image: string = $('img', manga).attr('src') ?? ''
+        const image: string = $('img', manga).attr('data-src') ?? ''
         const title: string = $('img', manga).attr('alt') ?? ''
 
         const id = $('a', manga).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? ''
