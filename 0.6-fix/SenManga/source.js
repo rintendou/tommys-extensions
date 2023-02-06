@@ -1082,8 +1082,8 @@ exports.parseHomeSections = parseHomeSections;
 const parseViewMore = ($) => {
     const manga = [];
     const collectedIds = [];
-    for (const obj of $('div.upd', 'div.listupd').toArray()) {
-        const image = $('img', obj).attr('src') ?? '';
+    for (const obj of $('.mng', 'div.widget').toArray()) {
+        const image = $('img', obj).attr('data-src') ?? '';
         const title = $('img', obj).attr('alt') ?? '';
         const id = $('a', obj).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? '';
         const getChapter = $('div.chapter > strong', obj).text().trim();
