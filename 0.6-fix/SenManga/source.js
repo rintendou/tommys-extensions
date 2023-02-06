@@ -1033,7 +1033,7 @@ const parseHomeSections = ($, sectionCallback) => {
     // Most Popular
     const mostPopularSection_Array = [];
     for (const manga of $('li', $('.sidebar .widget .widget-header:contains(\'Most Popular\')').next()).toArray()) {
-        const image = $('img', manga).first().attr('src') ?? '';
+        const image = $('img', manga).first().attr('data-src') ?? '';
         const title = $('img', manga).first().attr('alt') ?? '';
         const id = $('a', manga).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? '';
         if (!id || !title)
@@ -1049,7 +1049,7 @@ const parseHomeSections = ($, sectionCallback) => {
     // New
     const newSection_Array = [];
     for (const manga of $('li', $('.widget .widget-header:contains(\'New Series\')').next()).toArray()) {
-        const image = $('img', manga).attr('src') ?? '';
+        const image = $('img', manga).attr('data-src') ?? '';
         const title = $('img', manga).attr('alt') ?? '';
         const id = $('a', manga).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? '';
         if (!id || !title)
