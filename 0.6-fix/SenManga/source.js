@@ -982,7 +982,6 @@ const parseChapters = ($, mangaId) => {
     return chapters;
 };
 exports.parseChapters = parseChapters;
-// THIS IS BROKEN
 const parseChapterDetails = ($, mangaId, chapterId) => {
     const pages = [];
     for (const img of $('.reader .picture').toArray()) {
