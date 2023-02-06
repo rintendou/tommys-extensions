@@ -216,8 +216,8 @@ export const parseViewMore = ($: CheerioStatic): MangaTile[] => {
     const manga: MangaTile[] = []
     const collectedIds: string[] = []
 
-    for (const obj of $('div.upd', 'div.listupd').toArray()) {
-        const image: string = $('img', obj).attr('src') ?? ''
+    for (const obj of $('.mng', 'div.widget').toArray()) {
+        const image: string = $('img', obj).attr('data-src') ?? ''
         const title: string = $('img', obj).attr('alt') ?? ''
 
         const id = $('a', obj).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? ''
