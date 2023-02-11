@@ -832,6 +832,7 @@ class SenManga extends paperback_extensions_common_1.Source {
             .addQueryParameter('page', page)
             .addQueryParameter('genre%5B%5D', query.includedTags?.map((x) => x.id).join('&genre%5B%5D='))
             .buildUrl();
+        console.log(url);
         const request = createRequestObject({
             url: url,
             method: 'GET'
@@ -1120,10 +1121,11 @@ const parseTags = ($) => {
     return tagSections;
 };
 exports.parseTags = parseTags;
+// ALSO PROBABLY BROKEN, FIX
 const parseSearch = ($) => {
     const mangas = [];
-    for (const obj of $('div.item', 'div.listupd').toArray()) {
-        let image = $('img', obj).first().attr('src') ?? '';
+    for (const obj of $('.mng', 'div.widget').toArray()) {
+        let image = $('img', obj).first().attr('data-src') ?? '';
         if (image.startsWith('/'))
             image = 'https://raw.senmanga.com/covers/' + image;
         const title = $('img', obj).first().attr('alt') ?? '';
@@ -1146,10 +1148,11 @@ const parseSearch = ($) => {
     return mangas;
 };
 exports.parseSearch = parseSearch;
+// THIS IS BROKEN FIX
 const isLastPage = ($) => {
     // When you go ONLY to the last page in the search menu, the final li node appears with class 'page-item disabled'. Can use this to see if on last page.
     let isLast = true;
-    const hasDisabled = $('li.page-item', 'ul.pagination').last().attr()['class']?.trim() == 'page-item disabled';
+    const hasDisabled = $('li.page-item', 'ul.pagination').last().attr()['class']?.trim() == 'page-item disabled' && $('li.page-item', 'ul.pagination').last().attr()['aria-label']?.trim() == 'Next »';
     if (!hasDisabled)
         isLast = false;
     return isLast;
