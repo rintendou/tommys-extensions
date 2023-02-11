@@ -38,8 +38,7 @@ export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
 
     const description = decodeHTMLEntity($('div.summary').text().trim() ?? 'No description available')
 
-    const rawStatus = $('div.info div.item:contains(\'Status:\')').text().replace('Status:', '').trim()
-    console.log(rawStatus)
+    const rawStatus = $('div.info div.item:contains(\'Status:\')').text().replace('Status:', ' ').trim()
     let status = MangaStatus.ONGOING
     switch (rawStatus.toUpperCase()) {
         case 'ONGOING':
@@ -67,7 +66,6 @@ export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
 
 export const parseChapters = ($: CheerioStatic, mangaId: string): Chapter[] => {
     const chapters: Chapter[] = []
-    let sortingIndex = 0
 
     for (const chapter of $('li', 'ul.chapter-list').toArray()) {
         const title = decodeHTMLEntity($('a', chapter).text().trim())
@@ -88,10 +86,7 @@ export const parseChapters = ($: CheerioStatic, mangaId: string): Chapter[] => {
             langCode: LanguageCode.ENGLISH,
             chapNum: chapNum,
             time: date,
-            // @ts-ignore
-            sortingIndex
         }))
-        sortingIndex--
     }
 
     return chapters
@@ -100,13 +95,8 @@ export const parseChapters = ($: CheerioStatic, mangaId: string): Chapter[] => {
 export const parseChapterDetails = ($: CheerioStatic, mangaId: string, chapterId: string): ChapterDetails => {
     const pages: string[] = []
 
-    const data = $.html()
-    let obj: any = /var imglist = ([^;]*)/.exec(data)?.[1] ?? ''
-    if (obj == '') throw new Error(`Failed to find page details script for manga ${mangaId}`) // If null, throw error, else parse data to json.
-    obj = JSON.parse(obj)
- 
-    for (const img of obj) {
-        const image = img.url
+    for (const img of $('.reader .picture').toArray()) {
+        const image = $(img).attr('src')
         if (!image) continue
         pages.push(image)
     }
@@ -131,7 +121,7 @@ export const parseUpdatedManga = ($: CheerioStatic, time: Date, ids: string[]): 
 
     const updatedManga: string[] = []
 
-    for (const manga of $('div.mng', 'div.listupd').toArray()) {
+    for (const manga of $('div.mng', 'div.search-body').toArray()) {
         const id = $('a', manga).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? ''
         if (!id) continue
 
@@ -158,13 +148,13 @@ export const parseUpdatedManga = ($: CheerioStatic, time: Date, ids: string[]): 
 export const parseHomeSections = ($: CheerioStatic, sectionCallback: (section: HomeSection) => void): void => {
     const mostPopularSection = createHomeSection({ id: 'most_popular', title: 'Most Popular', view_more: true, type: HomeSectionType.singleRowLarge })
     const newSection = createHomeSection({ id: 'new', title: 'New', view_more: true })
-    const updateSection = createHomeSection({ id: 'updated', title: 'Latest Updated', view_more: true })
+    const updateSection = createHomeSection({ id: 'updated', title: 'Recently Updated', view_more: true })
 
     // Most Popular
     const mostPopularSection_Array: MangaTile[] = []
-    for (const manga of $('li',$('.widget .widget-header:contains(\'Most Popular\')').next()).toArray()) {
+    for (const manga of $('li',$('.sidebar .widget .widget-header:contains(\'Most Popular\')').next()).toArray()) {
 
-        const image: string = $('img', manga).first().attr('src') ?? ''
+        const image: string = $('img', manga).first().attr('data-src') ?? ''
         const title: string = $('img', manga).first().attr('alt') ?? ''
 
         const id = $('a', manga).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? ''
@@ -184,7 +174,7 @@ export const parseHomeSections = ($: CheerioStatic, sectionCallback: (section: H
     const newSection_Array: MangaTile[] = []
     for (const manga of $('li',$('.widget .widget-header:contains(\'New Series\')').next()).toArray()) {
 
-        const image: string = $('img', manga).attr('src') ?? ''
+        const image: string = $('img', manga).attr('data-src') ?? ''
         const title: string = $('img', manga).attr('alt') ?? ''
 
         const id = $('a', manga).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? ''
@@ -201,9 +191,9 @@ export const parseHomeSections = ($: CheerioStatic, sectionCallback: (section: H
     newSection.items = newSection_Array
     sectionCallback(newSection)
 
-    // Updated
+    // Recently Updated
     const updateSection_Array: MangaTile[] = []
-    for (const manga of $('div.mng', 'div.listupd').toArray()) {
+    for (const manga of $('div.mng', 'div.widget').toArray()) {
 
         const image: string = $('img', manga).first().attr('src') ?? ''
         const title: string = $('img', manga).first().attr('alt') ?? ''
@@ -226,8 +216,8 @@ export const parseViewMore = ($: CheerioStatic): MangaTile[] => {
     const manga: MangaTile[] = []
     const collectedIds: string[] = []
 
-    for (const obj of $('div.upd', 'div.listupd').toArray()) {
-        const image: string = $('img', obj).attr('src') ?? ''
+    for (const obj of $('.mng', 'div.widget').toArray()) {
+        const image: string = $('img', obj).attr('data-src') ?? ''
         const title: string = $('img', obj).attr('alt') ?? ''
 
         const id = $('a', obj).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? ''
@@ -270,11 +260,12 @@ export const parseTags = ($: CheerioStatic): TagSection[] => {
     return tagSections
 }
 
+// ALSO PROBABLY BROKEN, FIX
 export const parseSearch = ($: CheerioStatic): MangaTile[] => {
     const mangas: MangaTile[] = []
 
-    for (const obj of $('div.item', 'div.listupd').toArray()) {
-        let image: string = $('img', obj).first().attr('src') ?? ''
+    for (const obj of $('.mng', 'div.widget').toArray()) {
+        let image: string = $('img', obj).first().attr('data-src') ?? ''
         if (image.startsWith('/')) image = 'https://raw.senmanga.com/covers/' + image
 
         const title: string = $('img', obj).first().attr('alt') ?? ''
@@ -299,10 +290,11 @@ export const parseSearch = ($: CheerioStatic): MangaTile[] => {
     return mangas
 }
 
+// THIS IS BROKEN FIX
 export const isLastPage = ($: CheerioStatic): boolean => {
     // When you go ONLY to the last page in the search menu, the final li node appears with class 'page-item disabled'. Can use this to see if on last page.
     let isLast = true
-    const hasDisabled = $('li.page-item', 'ul.pagination').last().attr()['class']?.trim() == 'page-item disabled'
+    const hasDisabled = $('li.page-item', 'ul.pagination').last().attr()['class']?.trim() == 'page-item disabled' && $('li.page-item', 'ul.pagination').last().attr()['aria-label']?.trim() == 'Next »'
     if (!hasDisabled) isLast = false
 
     return isLast
