@@ -832,6 +832,7 @@ class SenManga extends paperback_extensions_common_1.Source {
             .addQueryParameter('page', page)
             .addQueryParameter('genre%5B%5D', query.includedTags?.map((x) => x.id).join('&genre%5B%5D='))
             .buildUrl();
+        console.log(url);
         const request = createRequestObject({
             url: url,
             method: 'GET'
@@ -933,8 +934,7 @@ const parseMangaDetails = ($, mangaId) => {
     }
     const tagSections = [createTagSection({ id: '0', label: 'genres', tags: arrayTags.map(x => createTag(x)) })];
     const description = decodeHTMLEntity($('div.summary').text().trim() ?? 'No description available');
-    const rawStatus = $('div.info div.item:contains(\'Status:\')').text().replace('Status:', '').trim();
-    console.log(rawStatus);
+    const rawStatus = $('div.info div.item:contains(\'Status:\')').text().replace('Status:', ' ').trim();
     let status = paperback_extensions_common_1.MangaStatus.ONGOING;
     switch (rawStatus.toUpperCase()) {
         case 'ONGOING':
@@ -961,7 +961,6 @@ const parseMangaDetails = ($, mangaId) => {
 exports.parseMangaDetails = parseMangaDetails;
 const parseChapters = ($, mangaId) => {
     const chapters = [];
-    let sortingIndex = 0;
     for (const chapter of $('li', 'ul.chapter-list').toArray()) {
         const title = decodeHTMLEntity($('a', chapter).text().trim());
         const chapterId = $('a', chapter).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? '';
@@ -979,23 +978,15 @@ const parseChapters = ($, mangaId) => {
             langCode: paperback_extensions_common_1.LanguageCode.ENGLISH,
             chapNum: chapNum,
             time: date,
-            // @ts-ignore
-            sortingIndex
         }));
-        sortingIndex--;
     }
     return chapters;
 };
 exports.parseChapters = parseChapters;
 const parseChapterDetails = ($, mangaId, chapterId) => {
     const pages = [];
-    const data = $.html();
-    let obj = /var imglist = ([^;]*)/.exec(data)?.[1] ?? '';
-    if (obj == '')
-        throw new Error(`Failed to find page details script for manga ${mangaId}`); // If null, throw error, else parse data to json.
-    obj = JSON.parse(obj);
-    for (const img of obj) {
-        const image = img.url;
+    for (const img of $('.reader .picture').toArray()) {
+        const image = $(img).attr('src');
         if (!image)
             continue;
         pages.push(image);
@@ -1012,7 +1003,7 @@ exports.parseChapterDetails = parseChapterDetails;
 const parseUpdatedManga = ($, time, ids) => {
     let loadMore = true;
     const updatedManga = [];
-    for (const manga of $('div.mng', 'div.listupd').toArray()) {
+    for (const manga of $('div.mng', 'div.search-body').toArray()) {
         const id = $('a', manga).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? '';
         if (!id)
             continue;
@@ -1038,11 +1029,11 @@ exports.parseUpdatedManga = parseUpdatedManga;
 const parseHomeSections = ($, sectionCallback) => {
     const mostPopularSection = createHomeSection({ id: 'most_popular', title: 'Most Popular', view_more: true, type: paperback_extensions_common_1.HomeSectionType.singleRowLarge });
     const newSection = createHomeSection({ id: 'new', title: 'New', view_more: true });
-    const updateSection = createHomeSection({ id: 'updated', title: 'Latest Updated', view_more: true });
+    const updateSection = createHomeSection({ id: 'updated', title: 'Recently Updated', view_more: true });
     // Most Popular
     const mostPopularSection_Array = [];
-    for (const manga of $('li', $('.widget .widget-header:contains(\'Most Popular\')').next()).toArray()) {
-        const image = $('img', manga).first().attr('src') ?? '';
+    for (const manga of $('li', $('.sidebar .widget .widget-header:contains(\'Most Popular\')').next()).toArray()) {
+        const image = $('img', manga).first().attr('data-src') ?? '';
         const title = $('img', manga).first().attr('alt') ?? '';
         const id = $('a', manga).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? '';
         if (!id || !title)
@@ -1058,7 +1049,7 @@ const parseHomeSections = ($, sectionCallback) => {
     // New
     const newSection_Array = [];
     for (const manga of $('li', $('.widget .widget-header:contains(\'New Series\')').next()).toArray()) {
-        const image = $('img', manga).attr('src') ?? '';
+        const image = $('img', manga).attr('data-src') ?? '';
         const title = $('img', manga).attr('alt') ?? '';
         const id = $('a', manga).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? '';
         if (!id || !title)
@@ -1071,9 +1062,9 @@ const parseHomeSections = ($, sectionCallback) => {
     }
     newSection.items = newSection_Array;
     sectionCallback(newSection);
-    // Updated
+    // Recently Updated
     const updateSection_Array = [];
-    for (const manga of $('div.mng', 'div.listupd').toArray()) {
+    for (const manga of $('div.mng', 'div.widget').toArray()) {
         const image = $('img', manga).first().attr('src') ?? '';
         const title = $('img', manga).first().attr('alt') ?? '';
         const id = $('a', manga).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? '';
@@ -1092,8 +1083,8 @@ exports.parseHomeSections = parseHomeSections;
 const parseViewMore = ($) => {
     const manga = [];
     const collectedIds = [];
-    for (const obj of $('div.upd', 'div.listupd').toArray()) {
-        const image = $('img', obj).attr('src') ?? '';
+    for (const obj of $('.mng', 'div.widget').toArray()) {
+        const image = $('img', obj).attr('data-src') ?? '';
         const title = $('img', obj).attr('alt') ?? '';
         const id = $('a', obj).attr('href')?.replace(/\/$/, '')?.split('/').pop() ?? '';
         const getChapter = $('div.chapter > strong', obj).text().trim();
@@ -1130,10 +1121,11 @@ const parseTags = ($) => {
     return tagSections;
 };
 exports.parseTags = parseTags;
+// ALSO PROBABLY BROKEN, FIX
 const parseSearch = ($) => {
     const mangas = [];
-    for (const obj of $('div.item', 'div.listupd').toArray()) {
-        let image = $('img', obj).first().attr('src') ?? '';
+    for (const obj of $('.mng', 'div.widget').toArray()) {
+        let image = $('img', obj).first().attr('data-src') ?? '';
         if (image.startsWith('/'))
             image = 'https://raw.senmanga.com/covers/' + image;
         const title = $('img', obj).first().attr('alt') ?? '';
@@ -1156,10 +1148,11 @@ const parseSearch = ($) => {
     return mangas;
 };
 exports.parseSearch = parseSearch;
+// THIS IS BROKEN FIX
 const isLastPage = ($) => {
     // When you go ONLY to the last page in the search menu, the final li node appears with class 'page-item disabled'. Can use this to see if on last page.
     let isLast = true;
-    const hasDisabled = $('li.page-item', 'ul.pagination').last().attr()['class']?.trim() == 'page-item disabled';
+    const hasDisabled = $('li.page-item', 'ul.pagination').last().attr()['class']?.trim() == 'page-item disabled' && $('li.page-item', 'ul.pagination').last().attr()['aria-label']?.trim() == 'Next »';
     if (!hasDisabled)
         isLast = false;
     return isLast;
