@@ -215,7 +215,9 @@ export class SenManga extends Source {
             .addQueryParameter('page', page)
             .addQueryParameter('genre%5B%5D', query.includedTags?.map((x: any) => x.id).join('&genre%5B%5D='))
             .buildUrl()
-            
+        
+        console.log(url)
+
         const request = createRequestObject({
             url: url,
             method: 'GET'

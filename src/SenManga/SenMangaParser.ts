@@ -260,11 +260,12 @@ export const parseTags = ($: CheerioStatic): TagSection[] => {
     return tagSections
 }
 
+// ALSO PROBABLY BROKEN, FIX
 export const parseSearch = ($: CheerioStatic): MangaTile[] => {
     const mangas: MangaTile[] = []
 
-    for (const obj of $('div.item', 'div.listupd').toArray()) {
-        let image: string = $('img', obj).first().attr('src') ?? ''
+    for (const obj of $('.mng', 'div.widget').toArray()) {
+        let image: string = $('img', obj).first().attr('data-src') ?? ''
         if (image.startsWith('/')) image = 'https://raw.senmanga.com/covers/' + image
 
         const title: string = $('img', obj).first().attr('alt') ?? ''
@@ -289,10 +290,11 @@ export const parseSearch = ($: CheerioStatic): MangaTile[] => {
     return mangas
 }
 
+// THIS IS BROKEN FIX
 export const isLastPage = ($: CheerioStatic): boolean => {
     // When you go ONLY to the last page in the search menu, the final li node appears with class 'page-item disabled'. Can use this to see if on last page.
     let isLast = true
-    const hasDisabled = $('li.page-item', 'ul.pagination').last().attr()['class']?.trim() == 'page-item disabled'
+    const hasDisabled = $('li.page-item', 'ul.pagination').last().attr()['class']?.trim() == 'page-item disabled' && $('li.page-item', 'ul.pagination').last().attr()['aria-label']?.trim() == 'Next »'
     if (!hasDisabled) isLast = false
 
     return isLast
