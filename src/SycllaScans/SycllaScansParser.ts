@@ -64,7 +64,7 @@ export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
     //     titles.push(decodeHTMLEntity(title))
     // }
     
-    const regexedImage = $('div.Cover__MediaContent-sc-i96fzk-1').attr('style')?.match(/background-image:url\('([^']+)'\)/) ?? ''
+    const regexedImage = $('div.Cover__MediaContent-sc-i96fzk-1').attr('style')?.match(/background-image:url\('([^']+)'\)/) ?? '' // This regex grabs only the link to the image
     let image = 'https://i.imgur.com/GYUxEX8.png'
 
     if (regexedImage && typeof regexedImage == 'string') {
@@ -112,13 +112,58 @@ export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
     })
 } 
 
-export const parseChapters = () => {
+export const parseChapters = ($: CheerioStatic, mangaId: string): Chapter[] => {
+    const chapters: Chapter[] = []
 
+    for (const chapter of $('div.position-relative').toArray()) {
+        const title = decodeHTMLEntity($('p.styles__ChapterTitle-sc-1osntdz-7', chapter).text().trim())
+        const chapterLink: string = $('a', chapter).attr('href') ?? ''
+        // .replace(/\/$/, '')?.split('/').pop() ?? ''
+
+        if (!chapterLink) continue
+
+        const date = new Date($('p.Chapter__ChapterLastUpdate-sc-gsfq2u-5', chapter).text().trim() ?? '')
+
+        const chapNumRegex = title.match(/(\d+\.?\d?)+/) // This regex matches for numbers
+        let chapNum = 0
+        if (chapNumRegex && chapNumRegex[1]) chapNum = Number(chapNumRegex[1])
+
+        chapters.push(createChapter({
+            id: chapterLink,
+            mangaId,
+            name: `Chapter ${chapNum}`,
+            langCode: LanguageCode.ENGLISH,
+            chapNum: chapNum,
+            time: date,
+        }))
+    }
+
+    return chapters
 }
 
-export const parseChapterDetails = () => {
+export const parseChapterDetails = ($: CheerioStatic, mangaId: string, chapterId: string): ChapterDetails => {
+    const pages: string[] = []
 
-}
+    for (const img of $('div.ImagesList__ImageWrapper-sc-s266pr-1').toArray()) {
+        const regexedImage = $('span',img).attr('style')?.match(/background-image:url\((.*?)\);/)
+
+        if (regexedImage && typeof regexedImage == 'string') {
+            const image = regexedImage[0]
+            pages.push(image)
+        } else {
+            continue
+        }
+
+    }
+
+    const chapterDetails = createChapterDetails({
+        id: chapterId,
+        mangaId: mangaId,
+        pages: pages,
+        longStrip: false
+    })
+
+    return chapterDetails
 
 export const parseHomeSections = () => {
 
