@@ -18,6 +18,3 @@ docs
 
 # mac stuff
 .DS_Store
-
-# Deprecated sources
-src/SenManga
